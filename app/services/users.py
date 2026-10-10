@@ -110,3 +110,17 @@ def handle_update_user(data: UserUpdate, db: Session, user_id: uuid.UUID) -> Use
     db.refresh(updating_user)
 
     return updating_user
+
+def handle_delete_user(user_id: uuid.UUID, db: Session) -> None:
+    stmt = (
+        select(User)
+        .where(User.id == user_id)
+    )
+
+    deleting_user = db.execute(stmt).scalar_one_or_none()
+
+    if not deleting_user:
+        raise UserNotFound
+
+    db.delete(deleting_user)
+    db.commit()
