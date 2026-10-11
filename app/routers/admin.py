@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from app.services.users import handle_admin_user_update, handle_delete_user_by_admin, handle_get_all_user, UserNotFound
 from collections.abc import Sequence
 from app.services.transactions import handle_get_all_transactions, handle_delete_transaction, TransactionsNotFound
-from app.schema.transactions import TransactionIn, TransactionAdminOut
+from app.schema.transactions import TransactionAdminOut
 from app.models.transactions import Transaction
 
 router = APIRouter(
