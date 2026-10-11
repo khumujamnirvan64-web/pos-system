@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from typing import Optional
+from typing import Optional, Literal
 
 class UserIn(BaseModel):
     email: EmailStr
@@ -40,3 +40,7 @@ class UserUpdate(BaseModel):
         if isinstance(v, str):
             return v.lower().strip()
         return v
+
+
+class ToggleAdminUpdate(BaseModel):
+    toggle: Literal[True, False]

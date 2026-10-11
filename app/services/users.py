@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.schema.users import UserIn, UserUpdate
+from app.schema.users import UserIn, UserUpdate, ToggleAdminUpdate
 from app.models.users import User
 from app.utils.password_hash import hash_password
 from app.utils.signup_token import delete_signup_token, verify_sign_up_token
@@ -10,7 +10,7 @@ from app.utils.password_hash import verify_password
 from app.core.jwt import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Depends
-from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
 
 class UserNotFound(Exception):
     pass
@@ -124,3 +124,43 @@ def handle_delete_user(user_id: uuid.UUID, db: Session) -> None:
 
     db.delete(deleting_user)
     db.commit()
+
+# Give admin the privilege to assign normal user as admin or remove
+def handle_admin_user_update(user_id: uuid.UUID, update_data: ToggleAdminUpdate, db: Session) -> User:
+    stmt = (
+        select(User)
+        .where(User.id == user_id)
+    )
+
+    updating_user = db.execute(stmt).scalar_one_or_none()
+
+    if not updating_user:
+        raise UserNotFound
+
+    updating_user.is_admin = update_data.toggle
+
+    db.commit()
+    db.refresh(updating_user)
+
+    return updating_user
+
+def handle_delete_user_by_admin(user_id: uuid.UUID, db: Session) -> None:
+    stmt = select(User).where(User.id == user_id)
+
+    deleting_user = db.execute(stmt).scalar_one_or_none()
+
+    if not deleting_user:
+        raise UserNotFound
+
+    db.delete(deleting_user)
+    db.commit()
+
+def handle_get_all_user(db: Session) -> Sequence[User]:
+    stmt = select(User)
+
+    users = db.execute(stmt).scalars().all()
+
+    if not users:
+        raise UserNotFound
+
+    return users
