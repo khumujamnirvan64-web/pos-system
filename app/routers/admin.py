@@ -12,6 +12,9 @@ from app.models.items import Item
 from sqlalchemy.exc import IntegrityError
 from app.services.users import handle_admin_user_update, handle_delete_user_by_admin, handle_get_all_user, UserNotFound
 from collections.abc import Sequence
+from app.services.transactions import handle_get_all_transactions, handle_delete_transaction, TransactionsNotFound
+from app.schema.transactions import TransactionIn, TransactionAdminOut
+from app.models.transactions import Transaction
 
 router = APIRouter(
     prefix="/admin",
@@ -123,4 +126,34 @@ def get_all_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found."
+        )
+
+# Transactions
+@router.get("/transaction", response_model=list[TransactionAdminOut])
+def get_all_transactions(
+    limit: int = 25,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+) -> Sequence[Transaction]:
+    try:
+        return handle_get_all_transactions(db, limit, offset)
+    except TransactionsNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found."
+        )
+
+@router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_transaction(
+    transaction_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_admin: Session = Depends(get_current_admin)
+) -> None:
+    try:
+        handle_delete_transaction(transaction_id, db)
+    except TransactionsNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found."
         )
