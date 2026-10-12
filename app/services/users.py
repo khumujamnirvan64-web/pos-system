@@ -5,6 +5,7 @@ from app.schema.users import UserIn, UserUpdate, ToggleAdminUpdate
 from app.models.users import User
 from app.utils.password_hash import hash_password
 from app.utils.signup_token import delete_signup_token, verify_sign_up_token
+from app.utils.count_admin import count_current_admin
 from app.schema.users import LoginOut
 from app.utils.password_hash import verify_password
 from app.core.jwt import create_access_token
@@ -112,6 +113,7 @@ def handle_update_user(data: UserUpdate, db: Session, user_id: uuid.UUID) -> Use
     return updating_user
 
 def handle_delete_user(user_id: uuid.UUID, db: Session) -> None:
+
     stmt = (
         select(User)
         .where(User.id == user_id)
@@ -121,6 +123,9 @@ def handle_delete_user(user_id: uuid.UUID, db: Session) -> None:
 
     if not deleting_user:
         raise UserNotFound
+
+    if deleting_user.is_admin:
+        count_current_admin(db)
 
     db.delete(deleting_user)
     db.commit()
@@ -151,6 +156,8 @@ def handle_delete_user_by_admin(user_id: uuid.UUID, db: Session) -> None:
 
     if not deleting_user:
         raise UserNotFound
+    if deleting_user.is_admin:
+        count_current_admin(db)
 
     db.delete(deleting_user)
     db.commit()
