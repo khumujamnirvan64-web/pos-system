@@ -57,7 +57,7 @@ def handle_one_item(sku: int, db: Session) -> Item:
 
     return item
 
-def handle_update_item(item_sku: int,payload: ItemUpdate, db: Session) -> Item:
+def handle_update_item(item_sku: int, payload: ItemUpdate, db: Session) -> Item:
     stmt = (
         select(Item)
         .where(Item.sku == item_sku)

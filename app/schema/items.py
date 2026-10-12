@@ -20,7 +20,6 @@ class ItemOut(BaseModel):
     )
 
 class ItemUpdate(BaseModel):
-    sku: Optional[int] = None
     name: Optional[str] = None
     updating_stock: Optional[int] = None
 
