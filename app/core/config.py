@@ -15,6 +15,10 @@ class Setting(BaseSettings):
     ACCESS_TOKEN_ALGORITHM: str
     ACCESS_EXP_MINUTE: int
 
+    FIRST_USER_NAME: str
+    FIRST_USER_PASSWORD: str
+    FIRST_USER_EMAIL: str
+
     @property
     def DB_URL(self):
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

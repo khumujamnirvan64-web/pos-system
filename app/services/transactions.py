@@ -66,7 +66,10 @@ def handle_create_transaction(transaction_batch: TransactionIn, db: Session, cur
 def handle_get_my_transaction(user_id: uuid.UUID, db: Session) -> Sequence[Transaction]:
     stmt = (
         select(Transaction)
-        .where(Transaction.user_id == user_id)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.is_deleted == False
+        )
     )
 
     transactions_list = db.execute(stmt).scalars().all()
@@ -81,7 +84,8 @@ def handle_get_transaction(user_id: uuid.UUID, transaction_id: uuid.UUID, db: Se
         select(Transaction)
         .where(
                 Transaction.user_id == user_id,
-                Transaction.id == transaction_id
+                Transaction.id == transaction_id,
+                Transaction.is_deleted == False
             )
     )
 
@@ -98,7 +102,7 @@ def handle_get_all_transactions(db: Session, limit: int, offset: int) -> Sequenc
         select(Transaction)
         .limit(limit)
         .offset(offset)
-        .order_by(Transaction.sku)
+        .order_by(Transaction.created_at.desc())
     )
     transactions = db.execute(stmt).scalars().all()
     
@@ -110,7 +114,10 @@ def handle_get_all_transactions(db: Session, limit: int, offset: int) -> Sequenc
 def handle_delete_transaction(transaction_id: uuid.UUID, db: Session) -> None:
     stmt = (
         select(Transaction)
-        .where(Transaction.id == transaction_id)
+        .where(
+            Transaction.id == transaction_id,
+            Transaction.is_deleted == False
+        )
     )
 
     transaction = db.execute(stmt).scalar_one_or_none()
@@ -118,5 +125,5 @@ def handle_delete_transaction(transaction_id: uuid.UUID, db: Session) -> None:
     if not transaction:
             raise TransactionsNotFound
 
-    db.delete(transaction)
+    transaction.is_deleted = True
     db.commit()

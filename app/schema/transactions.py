@@ -2,6 +2,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from app.schema.users import UserOut
 from enum import Enum
+from datetime import datetime
 
 class TransactionType(str, Enum):
     sales = "stock out"
@@ -20,6 +21,7 @@ class TransactionOut(BaseModel):
     sku: int
     movement: int
     transaction_type: TransactionType
+    created_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True
@@ -30,6 +32,7 @@ class TransactionAdminOut(BaseModel):
     sku: int
     movement: int
     transaction_type: TransactionType
+    created_at: datetime
     owner: UserOut
 
     model_config = ConfigDict(
