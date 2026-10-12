@@ -100,6 +100,7 @@ def handle_get_transaction(user_id: uuid.UUID, transaction_id: uuid.UUID, db: Se
 def handle_get_all_transactions(db: Session, limit: int, offset: int) -> Sequence[Transaction]:
     stmt = (
         select(Transaction)
+        .where(Transaction.is_deleted == False)
         .limit(limit)
         .offset(offset)
         .order_by(Transaction.created_at.desc())
