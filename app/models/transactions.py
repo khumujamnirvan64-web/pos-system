@@ -8,8 +8,8 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    sku: Mapped[int] = mapped_column(Integer, ForeignKey("items.sku", ondelete="SET NULL"),index=True, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=False)
+    sku: Mapped[int] = mapped_column(Integer, ForeignKey("items.sku", ondelete="SET NULL"),index=True, nullable=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     transaction_type: Mapped[str] = mapped_column(String(255), nullable=False)
     movement: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
