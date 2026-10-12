@@ -1,6 +1,6 @@
 import logging
 from fastapi import HTTPException, status
-from app.utils.password_tokens import generate_password_tokens, verify_password_tokens, delete_password_token, ExpiredToken, InvalidToken
+from app.utils.password_tokens import generate_password_tokens, verify_password_tokens, ExpiredToken, InvalidToken
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.schema.auth import ForgetPasswordRequest, ResetPasswordRequest

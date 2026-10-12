@@ -62,26 +62,3 @@ def verify_password_tokens(token: str, db: Session):
         db.rollback()
         logger.exception(f"Failed to verify token. Error: {e}")
         raise
-
-def delete_password_token(token: str, db: Session):
-    stmt = (
-                select(PasswordToken)
-                .where(
-                    PasswordToken.token_hash == token,
-                    PasswordToken.is_active == True
-                )
-            )
-
-    db_token = db.execute(stmt).scalar_one_or_none()
-    
-    if not db_token:
-        logger.warning(f"Attempted to delete non-existent signup token: {token}")
-        return
-
-    try:
-        db.delete(db_token)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.exception(f"Database error while deleting signup token {token}: {e}")
-        raise
