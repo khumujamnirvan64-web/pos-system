@@ -6,7 +6,7 @@ from app.models.users import User
 from app.services.dashboard import handle_get_movement_percentage
 
 router = APIRouter(
-    prefix="/dashboard",
+    prefix="/dashboard/v1",
     tags=["Dashboard"]
 )
 

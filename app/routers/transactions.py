@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from app.services.transactions import handle_create_transaction, handle_get_my_transaction, handle_get_transaction, TransactionsNotFound, InsufficientStockInput, ItemNotFound
 
 router = APIRouter(
-    prefix="/transaction",
+    prefix="/transaction/v1",
     tags=["Transaction"]
 )
 

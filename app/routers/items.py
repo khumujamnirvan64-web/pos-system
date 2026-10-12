@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 
 router = APIRouter(
-    prefix="/item",
+    prefix="/item/v1",
     tags=["Item"]
 )
 

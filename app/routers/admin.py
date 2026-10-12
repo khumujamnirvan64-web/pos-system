@@ -18,7 +18,7 @@ from app.models.transactions import Transaction
 from app.core.limiter import limiter
 
 router = APIRouter(
-    prefix="/admin",
+    prefix="/admin/v1",
     tags=["Admin"]
 )
 
@@ -36,6 +36,7 @@ def generate_signup_token(
 
     return {"invite_token": f"{singup_token}"}
 
+# Item routes
 @router.post("/item", status_code=status.HTTP_201_CREATED, response_model=ItemOut)
 def create_item(
     payload: ItemIn,
@@ -55,7 +56,7 @@ def create_item(
             detail="Item with this SKU already exist"
         )
 
-@router.patch("/item", response_model=ItemOut)
+@router.patch("/item/{sku}", response_model=ItemOut)
 def update_item(
     sku: int,
     payload: ItemUpdate,
@@ -75,7 +76,7 @@ def update_item(
             detail="Item with this SKU already exist"
         )
 
-@router.delete("/item", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/item/{sku}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(
     sku: int,
     db: Session = Depends(get_db),
@@ -89,7 +90,21 @@ def delete_item(
             detail="Item not found."
         )
 
-@router.patch("/user", response_model=UserOut)
+#User routes
+@router.get("/user", response_model=list[UserOut])
+def get_all_user(
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+) -> Sequence[User]:
+    try:
+        return handle_get_all_user(db)
+    except UserNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+@router.patch("/user/{user_id}", response_model=UserOut)
 def update_user_to_admin(
     user_id: uuid.UUID,
     update_data: ToggleAdminUpdate,
@@ -104,7 +119,7 @@ def update_user_to_admin(
             detail="User not found."
         )
 
-@router.delete("/user", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/user/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user_by_admin(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -112,19 +127,6 @@ def delete_user_by_admin(
 ) -> None:
     try:
         handle_delete_user_by_admin(user_id, db)
-    except UserNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
-
-@router.get("/user", response_model=list[UserOut])
-def get_all_user(
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin)
-) -> Sequence[User]:
-    try:
-        return handle_get_all_user(db)
     except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -147,7 +149,7 @@ def get_all_transactions(
             detail="Transaction not found."
         )
 
-@router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/transaction/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
     transaction_id: uuid.UUID,
     db: Session = Depends(get_db),
