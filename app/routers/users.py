@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from app.schema.users import UserIn, UserOut, UserUpdate
 from app.models.users import User
@@ -7,6 +7,7 @@ from app.core.dependencies import get_db, get_current_user
 from app.schema.users import LoginOut
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError 
+from app.core.limiter import limiter
 
 router = APIRouter(
     prefix="/user",
@@ -24,14 +25,10 @@ def get_user(db: Session = Depends(get_db), current_user: User = Depends(get_cur
         )
 
 @router.post("/login", response_model=LoginOut)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> LoginOut:
+@limiter.limit("5/hour")
+def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> LoginOut:
     try:
         return handle_login(db, form)
-    except UserNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
     except InvalidCredentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

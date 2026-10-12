@@ -19,6 +19,7 @@ def create_sign_up_token(email: str, db: Session) -> str:
     signup_token = jwt.encode(payload, settings.SIGN_UP_KEY, settings.SIGN_UP_ALGORITHM)
 
     db_data = SignUpToken(
+        email=payload["email"],
         token=signup_token,
         exp=payload["exp"]
     )

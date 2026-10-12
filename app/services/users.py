@@ -78,7 +78,7 @@ def handle_login(db: Session, form: OAuth2PasswordRequestForm = Depends()) -> Lo
     user = db.execute(stmt).scalar_one_or_none()
 
     if not user:
-        raise UserNotFound
+        raise InvalidCredentials
 
     check_password = verify_password(user.password, form.password)
 

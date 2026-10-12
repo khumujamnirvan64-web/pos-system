@@ -12,6 +12,7 @@ class UserOut(BaseModel):
     id: uuid.UUID
     email: EmailStr
     name: str
+    is_admin: bool
     created_at: datetime
 
     model_config = ConfigDict(

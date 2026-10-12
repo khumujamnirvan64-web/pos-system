@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.orm import Session
 from app.core.dependencies import get_db, get_current_admin
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status, Request
 from app.schema.signup_tokens import GenerateIn
 from app.utils.signup_token import create_sign_up_token
 from app.schema.items import ItemIn, ItemUpdate, ItemOut
@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from app.services.transactions import handle_get_all_transactions, handle_delete_transaction, TransactionsNotFound
 from app.schema.transactions import TransactionAdminOut
 from app.models.transactions import Transaction
+from app.core.limiter import limiter
 
 router = APIRouter(
     prefix="/admin",
@@ -22,7 +23,9 @@ router = APIRouter(
 )
 
 @router.post("/token/generate")
+@limiter.limit("5/3 hour")
 def generate_signup_token(
+    request: Request,
     data: GenerateIn,
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
