@@ -19,49 +19,44 @@ def handle_create_transaction(transaction_batch: TransactionIn, db: Session, cur
     sorted_items = sorted(transaction_batch.items, key=lambda x: x.sku)
     created_transactions: list[Transaction] = []
 
-    try:
-        for movement in sorted_items:
-            stmt = (
-                select(Item)
-                .where(Item.sku == movement.sku)
-                .with_for_update()
-            )
-
-            item = db.execute(stmt).scalar_one_or_none()
-
-            if not item:
-                raise ItemNotFound(f"Item with SKU {movement.sku} not found.")
-
-            delta = (
-                -movement.quantity
-                if movement.transaction_type == TransactionType.sales
-                else movement.quantity
-            )
-
-            if item.current_stock + delta < 0:
-                raise InsufficientStockInput(f"Insufficient stock for SKU {movement.sku}.")
-
-            item.current_stock += delta
-
-            transaction = Transaction(
-                sku=movement.sku,
-                user_id=current_user.id,
-                transaction_type = movement.transaction_type,
-                movement=delta
-            )
-
-            db.add(transaction)
-            db.flush()
-            db.refresh(transaction)
-
-            created_transactions.append(transaction)
-        db.commit()
-        return created_transactions
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Transactions failed! Error: {str(e)}"
+    for movement in sorted_items:
+        stmt = (
+            select(Item)
+            .where(Item.sku == movement.sku)
+            .with_for_update()
         )
+
+        item = db.execute(stmt).scalar_one_or_none()
+
+        if not item:
+            raise ItemNotFound(f"Item with SKU {movement.sku} not found.")
+
+        delta = (
+            -movement.quantity
+            if movement.transaction_type == TransactionType.sales
+            else movement.quantity
+        )
+
+        if item.current_stock + delta < 0:
+            raise InsufficientStockInput(f"Insufficient stock for SKU {movement.sku}.")
+
+        item.current_stock += delta
+
+        transaction = Transaction(
+            sku=movement.sku,
+            user_id=current_user.id,
+            transaction_type = movement.transaction_type,
+            movement=delta
+        )
+
+        db.add(transaction)
+        db.flush()
+        db.refresh(transaction)
+
+        created_transactions.append(transaction)
+    db.commit()
+    return created_transactions
+
 # Get all transaction of the user
 def handle_get_my_transaction(user_id: uuid.UUID, db: Session) -> Sequence[Transaction]:
     stmt = (
