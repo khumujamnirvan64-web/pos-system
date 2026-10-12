@@ -22,6 +22,10 @@ class Setting(BaseSettings):
     GMAIL: str
     APP_PASSWORD: str
 
+    PASSWORD_SECRET_KEY: str
+    PASSWORD_ALGORITHM: str
+    PASSWORD_EXP_MINUTE: int
+
     @property
     def DB_URL(self):
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

@@ -71,7 +71,7 @@ def delete_signup_token(token, db: Session):
     db_token = db.execute(stmt).scalar_one_or_none()
 
     if not db_token:
-        logger.warning(f"Attepted to delete non-existent signup token: {token}")
+        logger.warning(f"Attempted to delete non-existent signup token: {token}")
         return
 
     try:

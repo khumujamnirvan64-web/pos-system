@@ -7,7 +7,7 @@ from app.models.users import User
 from app.core.jwt import verify_access_token, InvalidTokenError
 from fastapi import HTTPException, status
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/v1/login")
 
 def get_db():
     db: Session = SessionLocal()

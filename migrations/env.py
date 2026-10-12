@@ -11,6 +11,7 @@ from app.models.transactions import Transaction
 from app.models.users import User
 from app.models.sign_up_tokens import SignUpToken
 from app.models.items import Item
+from app.models.password_tokens import PasswordToken
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
