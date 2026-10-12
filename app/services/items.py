@@ -58,26 +58,21 @@ def handle_one_item(sku: int, db: Session) -> Item:
     return item
 
 def handle_update_item(item_sku: int, payload: ItemUpdate, db: Session) -> Item:
-    stmt = (
-        select(Item)
-        .where(Item.sku == item_sku)
-        .with_for_update()
-    )
+    stmt =  select(Item).where(Item.sku == item_sku).with_for_update()
+    
+    item = db.execute(stmt).scalar_one_or_none()
 
-    updating_item = db.execute(stmt).scalar_one_or_none()
-
-    if not updating_item:
+    if item is None:
         raise ItemNotFound
 
-    updating_data = payload.model_dump(exclude_unset=True)
-
-    for field, value in updating_data.items():
-        setattr(updating_item, field, value)
+    if payload.name is not None:
+        item.name = payload.name
+    if payload.current_stock is not None:
+        item.current_stock = payload.current_stock
 
     db.commit()
-    db.refresh(updating_item)
-
-    return updating_item
+    db.refresh(item)
+    return item
 
 def handle_delete_item(item_sku: int, db: Session) -> None:
     stmt = select(Item).where(Item.sku == item_sku)

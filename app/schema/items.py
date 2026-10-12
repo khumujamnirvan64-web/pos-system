@@ -21,7 +21,7 @@ class ItemOut(BaseModel):
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
-    updating_stock: Optional[int] = None
+    current_stock: Optional[int] = Field(default=None, ge=0, description="Stock update")
 
     @field_validator("name", mode="before")
     @classmethod
