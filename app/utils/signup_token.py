@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.models.sign_up_tokens import SignUpToken
 from fastapi import HTTPException, status
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_sign_up_token(email: str, db: Session) -> str:
     payload = {
@@ -67,8 +70,14 @@ def delete_signup_token(token, db: Session):
 
     db_token = db.execute(stmt).scalar_one_or_none()
 
+    if not db_token:
+        logger.warning(f"Attepted to delete non-existent signup token: {token}")
+        return
+
     try:
         db.delete(db_token)
         db.commit()
     except Exception as e:
-        print(e)
+        db.rollback()
+        logger.exception(f"Database error while deleting signup token {token}: {e}")
+        raise

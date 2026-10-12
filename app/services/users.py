@@ -156,6 +156,7 @@ def handle_delete_user_by_admin(user_id: uuid.UUID, db: Session) -> None:
 
     if not deleting_user:
         raise UserNotFound
+    
     if deleting_user.is_admin:
         count_current_admin(db)
 
