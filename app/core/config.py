@@ -19,6 +19,9 @@ class Setting(BaseSettings):
     FIRST_USER_PASSWORD: str
     FIRST_USER_EMAIL: str
 
+    GMAIL: str
+    APP_PASSWORD: str
+
     @property
     def DB_URL(self):
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
