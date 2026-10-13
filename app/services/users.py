@@ -3,15 +3,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.schema.users import UserIn, UserUpdate, ToggleAdminUpdate
 from app.models.users import User
-from app.utils.password_hash import hash_password
+from app.utils.password_hash import hash_password, verify_password
 from app.utils.signup_token import delete_signup_token, verify_sign_up_token
 from app.utils.count_admin import count_current_admin
-from app.schema.users import LoginOut
-from app.utils.password_hash import verify_password
+from app.utils.refresh_hash import hash_token
 from app.core.jwt import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi import Depends
 from collections.abc import Sequence
+from app.models.refresh_tokens import RefreshToken
+from datetime import datetime, timezone, timedelta
+from app.utils.refresh_tokens import generate_refresh_token
+from app.core.config import settings
 
 class UserNotFound(Exception):
     pass
@@ -67,8 +69,7 @@ def handle_get_current_user(db: Session, user_id: uuid.UUID) -> User:
         raise UserNotFound
 
     return user
-
-def handle_login(db: Session, form: OAuth2PasswordRequestForm = Depends()) -> LoginOut:
+def handle_login(db: Session, form: OAuth2PasswordRequestForm):
     normalized_email = form.username.lower().strip()
 
     stmt = (
@@ -87,9 +88,24 @@ def handle_login(db: Session, form: OAuth2PasswordRequestForm = Depends()) -> Lo
         raise InvalidCredentials
 
     token = create_access_token(str(user.id))
-    
+    generated_refresh_token = generate_refresh_token()
+    expired_at = datetime.now(timezone.utc) + timedelta(
+        days=settings.REFRESH_TOKEN_EXP_DAY
+    )
 
-    return LoginOut(access_token=token)
+    hash_refresh = hash_token(generated_refresh_token)
+
+    db_data = RefreshToken(
+        user_id=str(user.id),
+        token=hash_refresh,
+        expired_at=expired_at
+    )
+
+    db.add(db_data)
+    db.commit()
+
+    return token, generated_refresh_token
+
 
 def handle_update_user(data: UserUpdate, db: Session, user_id: uuid.UUID) -> User:
     stmt = (

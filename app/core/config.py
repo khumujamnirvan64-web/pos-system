@@ -26,6 +26,8 @@ class Setting(BaseSettings):
     PASSWORD_ALGORITHM: str
     PASSWORD_EXP_MINUTE: int
 
+    REFRESH_TOKEN_EXP_DAY: int
+
     @property
     def DB_URL(self):
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

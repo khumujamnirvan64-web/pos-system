@@ -1,13 +1,13 @@
 import logging
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Response, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 from app.services.users import handle_login, handle_create_user, UserAlreadyExist, InvalidCredentials, UninvitedEmailError
-from app.services.auth import handle_send_reset_link, handle_reset_password
+from app.services.auth import handle_send_reset_link, handle_reset_password, handle_refresh_token, InvalidRefreshToken, RefreshTokenMissing
 from app.schema.auth import ResetPasswordRequest, ForgetPasswordRequest
 from app.schema.users import LoginOut, UserIn, UserOut
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, get_current_user
 from app.models.users import User
 
 logger = logging.getLogger(__name__)
@@ -17,11 +17,27 @@ router = APIRouter(
     tags=["Auth"]
 )
 
+REFRESH_TOKEN_EXPIRE_SECONDS = 7 * 24 * 60 * 60 # 7 days
+
 @router.post("/login", response_model=LoginOut)
 @limiter.limit("5/hour")
-def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> LoginOut:
+def login(request: Request, response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     try:
-        return handle_login(db, form)
+        access_token, refresh_token = handle_login(db, form)
+
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=REFRESH_TOKEN_EXPIRE_SECONDS
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer"
+        }
     except InvalidCredentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,3 +76,36 @@ def reset_password(token: str, data: ResetPasswordRequest, db: Session = Depends
     return{
         "detail": "Your password has been successfully updated. You can now log in."
     }
+
+@router.post("/refresh")
+def refresh_token(
+    response: Response,
+    refresh_token: str = Cookie(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        new_access_token, new_refresh_token = handle_refresh_token(refresh_token, db)
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=REFRESH_TOKEN_EXPIRE_SECONDS
+        )
+
+        return {
+                "access_token": new_access_token,
+                "token_type": "Bearer"
+            }
+
+    except InvalidRefreshToken as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e
+        )
+    except RefreshTokenMissing as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e
+        )
