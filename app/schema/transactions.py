@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field
 from app.schema.users import UserOut
 from enum import Enum
 from datetime import datetime

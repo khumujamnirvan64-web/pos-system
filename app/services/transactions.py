@@ -1,9 +1,11 @@
 import uuid
 from app.schema.transactions import TransactionIn, TransactionType
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from app.models.transactions import Transaction
 from app.models.items import Item
+from app.models.idempotency_keys import IdempotencyRecord
 from collections.abc import Sequence
 from app.models.users import User
 
@@ -14,7 +16,16 @@ class ItemNotFound(Exception):
 class InsufficientStockInput(Exception):
     pass
 
-def handle_create_transaction(transaction_batch: TransactionIn, db: Session, current_user: User) -> list[Transaction]:
+def handle_create_transaction(transaction_batch: TransactionIn, db: Session, current_user: User, idempotency_key: str | None = None) -> list[Transaction] | dict:
+    if idempotency_key:
+        existing_record = db.get(IdempotencyRecord, idempotency_key)
+        if existing_record:
+            return {
+                "_cache": True,
+                "status_code": existing_record.response_status_code,
+                "body": existing_record.response_body
+            }
+
     sorted_items = sorted(transaction_batch.items, key=lambda x: x.sku)
     created_transactions: list[Transaction] = []
 
@@ -54,6 +65,38 @@ def handle_create_transaction(transaction_batch: TransactionIn, db: Session, cur
 
         created_transactions.append(transaction)
     db.commit()
+    if idempotency_key:
+        # FIX: Serialize ORM models into a JSON-safe list of dictionaries (strings for UUIDs/datetimes)
+        serialized_body = [
+            {
+                "id": str(t.id),
+                "sku": t.sku,
+                "movement": t.movement,
+                "transaction_type": t.transaction_type,
+                "created_at": t.created_at.isoformat() if t.created_at else None
+            }
+            for t in created_transactions
+        ]
+
+        new_idempotency_key = IdempotencyRecord(
+            idempotency_key=idempotency_key,
+            response_status_code=201,
+            response_body=serialized_body
+        )
+
+        db.add(new_idempotency_key)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            winning_record = db.get(IdempotencyRecord, idempotency_key)
+            if winning_record:
+                return {
+                    "_cache": True,
+                    "status_code": winning_record.response_status_code,
+                    "body": winning_record.response_body
+                }
+            
     return created_transactions
 
 # Get all transaction of the user
