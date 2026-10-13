@@ -158,6 +158,9 @@ def handle_admin_user_update(user_id: uuid.UUID, update_data: ToggleAdminUpdate,
     if not updating_user:
         raise UserNotFound
 
+    if updating_user.is_admin:
+        count_current_admin(db)
+
     updating_user.is_admin = update_data.is_admin
 
     db.commit()

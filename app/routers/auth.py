@@ -4,10 +4,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 from app.services.users import handle_login, handle_create_user, UserAlreadyExist, InvalidCredentials, UninvitedEmailError
-from app.services.auth import handle_send_reset_link, handle_reset_password, handle_refresh_token, InvalidRefreshToken, RefreshTokenMissing
+from app.services.auth import handle_send_reset_link, handle_reset_password, handle_refresh_token, handle_logout, InvalidRefreshToken, RefreshTokenMissing, TokenNotFound
 from app.schema.auth import ResetPasswordRequest, ForgetPasswordRequest
 from app.schema.users import LoginOut, UserIn, UserOut
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, get_current_user
 from app.models.users import User
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,9 @@ def reset_password(token: str, data: ResetPasswordRequest, db: Session = Depends
     }
 
 @router.post("/refresh")
+@limiter.limit("1/10minute")
 def refresh_token(
+    request: Request,
     response: Response,
     refresh_token: str = Cookie(None),
     db: Session = Depends(get_db)
@@ -121,3 +123,7 @@ def refresh_token(
                 "message": e
             }
         )
+
+@router.delete("/logout", status_code=status.HTTP_200_OK)
+def logout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return handle_logout(current_user.id, db)

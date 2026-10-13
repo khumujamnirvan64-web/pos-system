@@ -22,6 +22,8 @@ class RefreshTokenMissing(Exception):
     pass
 class InvalidRefreshToken(Exception):
     pass
+class TokenNotFound(Exception):
+    pass
 
 def handle_send_reset_link(
         data: ForgetPasswordRequest,
@@ -130,3 +132,19 @@ def handle_refresh_token(refresh_token: str, db: Session):
     db.commit()
 
     return new_access_token, new_refresh_token
+
+def handle_logout(user_id: uuid.UUID, db: Session):
+    stmt = (
+        select(RefreshToken)
+        .where(RefreshToken.user_id == user_id)
+    )
+
+    user_token = db.execute(stmt).scalar_one_or_none()
+    
+    if user_token:
+        db.delete(user_token)
+        db.commit()
+
+    return {
+        "message": "Successfully logout."
+    }

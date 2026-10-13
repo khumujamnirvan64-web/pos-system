@@ -29,6 +29,7 @@ origins = [
     "http://localhost",
     "http://localhost:3000",  # e.g., React / Vite dev server
     "http://127.0.0.1:3000",
+    "http://localhost:5173"
 ]
 
 app.add_middleware(

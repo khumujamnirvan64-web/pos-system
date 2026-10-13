@@ -16,5 +16,8 @@ def count_current_admin(db: Session):
     if current_admins <= 1:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete the last remaining administrator account."
+            detail={
+                "error": "LAST_ADMIN_ERROR",
+                "message": "Cannot delete or change admin status of the last remaining administrator account."
+            }
         )
