@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.password_tokens import PasswordToken
+from jwt.exceptions import ExpiredSignatureError
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def verify_password_tokens(token: str, db: Session):
         db_token.is_active = False
 
         return payload
-    except Exception as e:
+    except ExpiredSignatureError:
         db.rollback()
-        logger.exception(f"Failed to verify token. Error: {e}")
+        logger.exception(f"Token Exprired.")
         raise
