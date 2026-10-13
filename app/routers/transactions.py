@@ -34,13 +34,8 @@ def get_my_transaction(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> Sequence[Transaction]:
-    try:
-        return handle_get_my_transaction(current_user.id, db)
-    except TransactionsNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transactions not found."
-        )
+    
+    return handle_get_my_transaction(current_user.id, db)
 
 @router.get("/{id}", response_model=TransactionOut)
 def get_transaction(
@@ -53,6 +48,9 @@ def get_transaction(
     except TransactionsNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transactions not found."
+            detail={
+                "error": "TRANSACTION_NOT_FOUND",
+                "message": "Requested transaction ID doesn't exists"
+            }
         )
     

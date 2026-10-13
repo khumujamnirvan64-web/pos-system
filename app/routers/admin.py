@@ -6,7 +6,7 @@ from app.schema.signup_tokens import GenerateIn
 from app.utils.signup_token import create_sign_up_token
 from app.schema.items import ItemIn, ItemUpdate, ItemOut
 from app.schema.users import UserOut, ToggleAdminUpdate
-from app.services.items import handle_create_item, handle_delete_item, handle_update_item, ItemNotFound, ItemAlreadyExists
+from app.services.items import handle_create_item, handle_delete_item, handle_update_item, ItemNotFound
 from app.models.users import User
 from app.models.items import Item
 from sqlalchemy.exc import IntegrityError
@@ -45,12 +45,8 @@ def create_item(
 ) -> Item:
     try:
         return handle_create_item(payload, db)
-    except ItemAlreadyExists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Item with the same name or SKU already exists"
-        )
     except IntegrityError:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Item with this SKU already exist"
@@ -68,12 +64,10 @@ def update_item(
     except ItemNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found."
-        )
-    except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Item with this SKU already exist"
+            detail={
+                "error": "ITEM_NOT_FOUND",
+                "message": "The item with the specified SKU could not be found."
+            }
         )
 
 @router.delete("/item/{sku}", status_code=status.HTTP_204_NO_CONTENT)
@@ -87,7 +81,10 @@ def delete_item(
     except ItemNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found."
+            detail={
+                "error": "ITEM_NOT_FOUND",
+                "message": "The item with the specified SKU could not be found."
+            }
         )
 
 #User routes
@@ -96,13 +93,8 @@ def get_all_user(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ) -> Sequence[User]:
-    try:
-        return handle_get_all_user(db)
-    except UserNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
+
+    return handle_get_all_user(db)
 
 @router.patch("/user/{user_id}", response_model=UserOut)
 def update_user_to_admin(
@@ -116,7 +108,10 @@ def update_user_to_admin(
     except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
+            detail={
+                "error": "USER_NOT_FOUND",
+                "message": "User with the given ID does not exists"
+            }
         )
 
 @router.delete("/user/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -130,7 +125,10 @@ def delete_user_by_admin(
     except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
+            detail={
+                    "error": "USER_NOT_FOUND",
+                    "message": "User with the given ID doesn't exists"
+                }
         )
 
 # Transactions
@@ -141,13 +139,8 @@ def get_all_transactions(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ) -> Sequence[Transaction]:
-    try:
-        return handle_get_all_transactions(db, limit, offset)
-    except TransactionsNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found."
-        )
+
+     return handle_get_all_transactions(db, limit, offset)
 
 @router.delete("/transaction/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
@@ -160,5 +153,8 @@ def delete_transaction(
     except TransactionsNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found."
+            detail={
+                "error": "TRANSACTION_NOT_FOUND",
+                "message": "The requested transaction is not found."
+            }
         )

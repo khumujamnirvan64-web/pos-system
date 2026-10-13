@@ -70,7 +70,7 @@ def handle_get_my_transaction(user_id: uuid.UUID, db: Session) -> Sequence[Trans
     transactions_list = db.execute(stmt).scalars().all()
 
     if not transactions_list:
-        raise TransactionsNotFound
+        return []
 
     return transactions_list
 
@@ -82,6 +82,7 @@ def handle_get_transaction(user_id: uuid.UUID, transaction_id: uuid.UUID, db: Se
                 Transaction.id == transaction_id,
                 Transaction.is_deleted == False
             )
+        .order_by(Transaction.created_at.desc())
     )
 
     transaction = db.execute(stmt).scalar_one_or_none()
@@ -103,7 +104,7 @@ def handle_get_all_transactions(db: Session, limit: int, offset: int) -> Sequenc
     transactions = db.execute(stmt).scalars().all()
     
     if not transactions:
-        raise TransactionsNotFound
+        return []
 
     return transactions
 

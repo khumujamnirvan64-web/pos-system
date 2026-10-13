@@ -75,13 +75,20 @@ def handle_reset_password(token: str, data: ResetPasswordRequest, db: Session):
     except ExpiredToken:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token has expired, generate a new one to try again."
+            detail={
+                "error": "EXPIRED_TOKEN",
+                "message": "Token has expired, generate a new one to try again."
+            }
         )
     except InvalidToken:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token is invalid."
+            detail={
+                "error": "INVALID_TOKEN",
+                "message": "Token is invalid."
+            }
         )
+
 def handle_refresh_token(refresh_token: str, db: Session):
     if not refresh_token:
         raise RefreshTokenMissing("Refresh token missing from cookies.")

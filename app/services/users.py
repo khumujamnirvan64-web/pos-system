@@ -69,6 +69,7 @@ def handle_get_current_user(db: Session, user_id: uuid.UUID) -> User:
         raise UserNotFound
 
     return user
+
 def handle_login(db: Session, form: OAuth2PasswordRequestForm):
     normalized_email = form.username.lower().strip()
 
@@ -105,7 +106,6 @@ def handle_login(db: Session, form: OAuth2PasswordRequestForm):
     db.commit()
 
     return token, generated_refresh_token
-
 
 def handle_update_user(data: UserUpdate, db: Session, user_id: uuid.UUID) -> User:
     stmt = (
@@ -158,7 +158,7 @@ def handle_admin_user_update(user_id: uuid.UUID, update_data: ToggleAdminUpdate,
     if not updating_user:
         raise UserNotFound
 
-    updating_user.is_admin = update_data.toggle
+    updating_user.is_admin = update_data.is_admin
 
     db.commit()
     db.refresh(updating_user)
@@ -185,6 +185,6 @@ def handle_get_all_user(db: Session) -> Sequence[User]:
     users = db.execute(stmt).scalars().all()
 
     if not users:
-        raise UserNotFound
+        return []
 
     return users

@@ -18,13 +18,8 @@ def get_items(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Sequence[Item]:
-    try:
-        return handle_get_items(db)
-    except ItemNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Items not found."
-        )
+    
+    return handle_get_items(db)
 
 @router.get("/{sku}", response_model=ItemOut)
 def one_item(
@@ -37,5 +32,8 @@ def one_item(
     except ItemNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Items not found."
+            detail={
+                "error": "ITEM_NOT_FOUND",
+                "message": "The item with the specified SKU could not be found."
+            }
         )

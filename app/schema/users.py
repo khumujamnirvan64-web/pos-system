@@ -44,4 +44,4 @@ class UserUpdate(BaseModel):
 
 
 class ToggleAdminUpdate(BaseModel):
-    toggle: Literal[True, False]
+    is_admin: Literal[True, False]

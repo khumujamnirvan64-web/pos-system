@@ -4,30 +4,14 @@ from app.schema.items import ItemIn, ItemUpdate
 from app.models.items import Item
 from collections.abc import Sequence
 
-class ItemAlreadyExists(Exception):
-    pass
 class ItemNotFound(Exception):
     pass
 
 def handle_create_item(payload: ItemIn, db: Session) -> Item:
-    normalized_name = payload.name.lower().strip()
-
-    stmt = (
-        select(Item)
-        .where(
-            Item.name == payload.name,
-            Item.sku == payload.sku
-        )
-    )
-
-    existing = db.execute(stmt).scalar_one_or_none()
-
-    if existing:
-        raise ItemAlreadyExists
 
     new_item = Item(
         sku=payload.sku,
-        name=normalized_name,
+        name=payload.name,
         current_stock=payload.initial_stock,
     )
 
@@ -43,7 +27,7 @@ def handle_get_items(db: Session) -> Sequence[Item]:
     items = db.execute(stmt).scalars().all()
 
     if not items:
-        raise ItemNotFound
+        return []
 
     return items
 

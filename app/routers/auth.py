@@ -61,12 +61,18 @@ def create_user(token: str, data: UserIn, db: Session = Depends(get_db)) -> User
     except UserAlreadyExist:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email already exists"
+            detail={
+                "error": "USER_ALREADY_EXIST",
+                "message": "User with this email already exists."
+            }
         )
     except UninvitedEmailError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Error! Use the invited email address to sign up."
+            detail={
+                "error": "UNIVITED_EMAIL",
+                "message": "Un-invited email was sent to sign-up"
+            }
         )
 
 @router.post("/reset-password/{token}")
@@ -102,10 +108,16 @@ def refresh_token(
     except InvalidRefreshToken as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e
+            detail={
+                "error": "INVALID_REFRESH_TOKEN",
+                "message": e
+            }
         )
     except RefreshTokenMissing as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e
+            detail={
+                "error": "REFRESH_TOKEN_MISSING",
+                "message": e
+            }
         )
