@@ -7,7 +7,7 @@ from app.services.users import handle_login, handle_create_user, UserAlreadyExis
 from app.services.auth import handle_send_reset_link, handle_reset_password, handle_refresh_token, InvalidRefreshToken, RefreshTokenMissing
 from app.schema.auth import ResetPasswordRequest, ForgetPasswordRequest
 from app.schema.users import LoginOut, UserIn, UserOut
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db
 from app.models.users import User
 
 logger = logging.getLogger(__name__)

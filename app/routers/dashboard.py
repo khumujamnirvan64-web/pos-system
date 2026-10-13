@@ -1,5 +1,5 @@
 # Admin Only Routes
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 from app.core.dependencies import get_db, get_current_admin
 from app.models.users import User

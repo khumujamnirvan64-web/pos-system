@@ -1,10 +1,9 @@
 import uuid
-from app.schema.transactions import TransactionIn, TransactionType, TransactionOut
+from app.schema.transactions import TransactionIn, TransactionType
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.models.transactions import Transaction
 from app.models.items import Item
-from fastapi import HTTPException, status
 from collections.abc import Sequence
 from app.models.users import User
 
@@ -58,13 +57,16 @@ def handle_create_transaction(transaction_batch: TransactionIn, db: Session, cur
     return created_transactions
 
 # Get all transaction of the user
-def handle_get_my_transaction(user_id: uuid.UUID, db: Session) -> Sequence[Transaction]:
+def handle_get_my_transaction(user_id: uuid.UUID, limit: int, offset: int, db: Session) -> Sequence[Transaction]:
     stmt = (
         select(Transaction)
         .where(
             Transaction.user_id == user_id,
             Transaction.is_deleted == False
         )
+        .limit(limit)
+        .offset(offset)
+        .order_by(Transaction.created_at)
     )
 
     transactions_list = db.execute(stmt).scalars().all()
@@ -82,7 +84,6 @@ def handle_get_transaction(user_id: uuid.UUID, transaction_id: uuid.UUID, db: Se
                 Transaction.id == transaction_id,
                 Transaction.is_deleted == False
             )
-        .order_by(Transaction.created_at.desc())
     )
 
     transaction = db.execute(stmt).scalar_one_or_none()

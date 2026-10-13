@@ -21,8 +21,13 @@ def handle_create_item(payload: ItemIn, db: Session) -> Item:
 
     return new_item
 
-def handle_get_items(db: Session) -> Sequence[Item]:
-    stmt = select(Item).order_by(Item.sku)
+def handle_get_items(db: Session, limit: int, offset: int) -> Sequence[Item]:
+    stmt = (
+        select(Item)
+        .limit(limit)
+        .offset(offset)
+        .order_by(Item.sku)
+    )
 
     items = db.execute(stmt).scalars().all()
 

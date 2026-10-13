@@ -15,11 +15,13 @@ router = APIRouter(
 
 @router.get("", response_model=list[ItemOut])
 def get_items(
+    limit: int = 20,
+    offset: int = 0,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Sequence[Item]:
     
-    return handle_get_items(db)
+    return handle_get_items(db, limit, offset)
 
 @router.get("/{sku}", response_model=ItemOut)
 def one_item(
