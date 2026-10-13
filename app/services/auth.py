@@ -139,12 +139,13 @@ def handle_logout(user_id: uuid.UUID, db: Session):
         .where(RefreshToken.user_id == user_id)
     )
 
-    user_token = db.execute(stmt).scalar_one_or_none()
-    
-    if user_token:
-        db.delete(user_token)
-        db.commit()
+    user_tokens = db.execute(stmt).scalars().all()
+
+    for token in user_tokens:
+        db.delete(token)
+
+    db.commit()
 
     return {
-        "message": "Successfully logout."
+        "message": "Successfully logged out."
     }
