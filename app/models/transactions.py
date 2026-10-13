@@ -13,7 +13,7 @@ class Transaction(Base):
     transaction_type: Mapped[str] = mapped_column(String(255), nullable=False)
     movement: Mapped[int] = mapped_column(Integer, nullable=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), index=True, server_default=func.now())
 
     __table_args__ = (
         CheckConstraint("transaction_type IN ('stock in', 'stock out')", name="check_valid_transaction_type"),
