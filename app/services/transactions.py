@@ -65,8 +65,8 @@ def handle_create_transaction(transaction_batch: TransactionIn, db: Session, cur
 
         created_transactions.append(transaction)
     db.commit()
+    
     if idempotency_key:
-        # FIX: Serialize ORM models into a JSON-safe list of dictionaries (strings for UUIDs/datetimes)
         serialized_body = [
             {
                 "id": str(t.id),

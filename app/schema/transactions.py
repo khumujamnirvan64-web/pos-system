@@ -33,7 +33,7 @@ class TransactionAdminOut(BaseModel):
     movement: int
     transaction_type: TransactionType
     created_at: datetime
-    owner: UserOut
+    owner: UserOut | None = None
 
     model_config = ConfigDict(
         from_attributes=True

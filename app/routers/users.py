@@ -18,7 +18,10 @@ def get_user(db: Session = Depends(get_db), current_user: User = Depends(get_cur
     except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
+            detail={
+                "error": "USER_NOT_FOUND",
+                "message": "User doesn't exist."
+            }
         )
 
 @router.patch("", response_model=UserOut)
@@ -29,7 +32,10 @@ def update_user(data: UserUpdate, db: Session = Depends(get_db), current_user: U
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already used."
+            detail={
+                "error": "CONFLICT",
+                "message": "A conflict occured in the database"
+            }
         )
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
@@ -39,5 +45,8 @@ def delete_user(current_user: User = Depends(get_current_user), db: Session = De
     except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
+            detail={
+                "error": "USER_NOT_FOUND",
+                "message": "User doesn't exist."
+            }
         )

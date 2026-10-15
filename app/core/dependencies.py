@@ -44,7 +44,10 @@ def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail={
+                "error": "USER_NOT_FOUND",
+                "detail": "user doesn't exist"
+            }
         )
 
     return user

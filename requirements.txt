@@ -21,3 +21,7 @@ argon2-cffi==25.1.0
 # Rate limiting and email delivery
 slowapi==0.1.10
 redmail==0.6.0
+
+# For testing
+pytest==9.1.1
+httpx2==0.28.1

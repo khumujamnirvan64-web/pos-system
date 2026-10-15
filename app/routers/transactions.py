@@ -40,10 +40,20 @@ def create_transaction(
     
     except ItemNotFound as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail={
+                                 "error": "ITEM_NOT_FOUND",
+                                 "message":str(e)
+                                 })
     except InsufficientStockInput as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "INSUFFICIENT_STOCK_ERROR",
+                "message": str(e)
+            }
+        )
 
 @router.get("", response_model=list[TransactionOut])
 def get_my_transaction(
