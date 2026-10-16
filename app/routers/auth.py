@@ -41,7 +41,10 @@ def login(request: Request, response: Response, form: OAuth2PasswordRequestForm 
     except InvalidCredentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Wrong email or password."
+            detail={
+                "error": "INVALID_CREDENTIALS",
+                "message": "Wrong email or password."
+            }
         )
 
 @router.post("/forget-password")
@@ -70,7 +73,7 @@ def create_user(token: str, data: UserIn, db: Session = Depends(get_db)) -> User
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
-                "error": "UNIVITED_EMAIL",
+                "error": "UNINVITED_EMAIL",
                 "message": "Un-invited email was sent to sign-up"
             }
         )
@@ -84,7 +87,7 @@ def reset_password(token: str, data: ResetPasswordRequest, db: Session = Depends
     }
 
 @router.post("/refresh")
-@limiter.limit("1/10minute")
+@limiter.limit("5/10minute")
 def refresh_token(
     request: Request,
     response: Response,
@@ -112,7 +115,7 @@ def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error": "INVALID_REFRESH_TOKEN",
-                "message": e
+                "message": str(e)
             }
         )
     except RefreshTokenMissing as e:
@@ -120,7 +123,7 @@ def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error": "REFRESH_TOKEN_MISSING",
-                "message": e
+                "message": str(e)
             }
         )
 

@@ -46,7 +46,10 @@ def verify_sign_up_token(token: str, db: Session):
         if not db_token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid signup Token"
+                detail={
+                    "error": "INVALID_SIGNUP_TOKEN",
+                    "message": "Signup token is invalid."
+                }
             )
 
         return payload
@@ -59,7 +62,10 @@ def verify_sign_up_token(token: str, db: Session):
     except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid signup token"
+            detail={
+                    "error": "INVALID_SIGNUP_TOKEN",
+                    "message": "Signup token is invalid."
+                }
         )
 
 def delete_signup_token(token, db: Session):
